@@ -5,6 +5,7 @@
 
 trigger:
 - main
+- tonychue-patch-1
 
 pool:
   vmImage: ubuntu-latest
@@ -42,4 +43,3 @@ stages:
         terraform apply -auto-approve tfplan
       displayName: 'Terraform Init and Apply'
 
-      
