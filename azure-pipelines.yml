@@ -92,7 +92,7 @@ stages:
         provider: 'azurerm'
         command: 'plan'
         commandOptions: '-out=tfplan -var-file=envinronments/${{ parameters.environment }}.tfvars'
-        workingDirectory: $(workingDirectory)
+        workingDirectory: $(System.DefaultWorkingDirectory)
         environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
         # publishPlan: 'Production plan'
 
