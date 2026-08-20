@@ -73,7 +73,7 @@ stages:
     - task: AzureCLI@2
       displayName: 'Azure Login and Terraform Init'
       inputs:
-        azureSubscription: 'testsvc'
+        azureSubscription: 'HCP Terraform (contoso-ltd)'
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         addSpnToEnvironment: true
