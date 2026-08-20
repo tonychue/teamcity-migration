@@ -85,7 +85,11 @@ stages:
 
           echo "Subscription:"
           az account show --query id -o tsv
-
+          az storage blob list \
+            --account-name tfdevopsaccount \
+            --container-name tf-dev-state-container \
+            --auth-mode login \
+            --output table
           terraform init \
             -backend-config="storage_account_name=tfdevopsaccount" \
             -backend-config="container_name=tf-dev-state-container" \
