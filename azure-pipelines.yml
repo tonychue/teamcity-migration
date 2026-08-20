@@ -7,10 +7,10 @@ trigger:
 - main
 - tonychue-patch-1
 
-pamameters:
+parameters:
   - name: environment
     type: string
-
+    default: 'dev'
   - name: serviceConnection
     type: string
     default: 'terraform'
@@ -19,7 +19,7 @@ pamameters:
     default: 'uksouth/terraform.state'
   - name: workingDirectory
     type: string
-    default: '$(System.DefaultWorkingDirectory)/'
+    default: '$(System.DefaultWorkingDirectory)'
 
 pool:
   vmImage: ubuntu-latest
@@ -99,43 +99,43 @@ stages:
     - publish: $(workingDirectory)/tfplan
       artifact: plan-${{ parameters.environment }}
 
-- stage: Apply_${{ parameters.environment }} 
-  displayName: Apply_${{ parameters.environment }}
-  dependsOn: Plan_${{ parameters.environment }}
-  jobs:
-    - deployment: TerraformApply
-      displayName: 'Terraform Apply'
-      environment: ${{ parameters.environment }}
-      strategy:
-        runOnce:
-          deploy:
-            steps:
-            - checkout: self
-            - task: TerraformInstaller@1
-              displayName: 'Install Terraform'
-              inputs:
-                terraformVersion: 'latest'
-            - download: current
-              artifact: plan-${{ parameters.environment }}  
-              path: $(workingDirectory)
-            - task: TerraformTask@5
-              displayName: 'Terraform Init'
-              inputs:
-                provider: 'azurerm'
-                command: 'init'
-                workingDirectory: $(workingDirectory)
-                backendServiceArm: ${{ parameters.serviceConnection }}
-                backendAzureRmResourceGroupName: 'rg_devops'
-                backendAzureRmStorageAccountName: 'tfdevopsaccount'
-                backendAzureRmContainerName: 'tf-dev-state-container'
-                backendAzureRmKey: ${{ parameters.stateKey }}
-                backendAzureRmUseCliFlagsForAuthentication: true
-            - task: TerraformTask@5
-              displayName: 'Apply Terraform Plan'
-              # condition: and(succeeded(), eq(variables['terraformPlan.changesPresent'], 'true'))
-              inputs:
-                provider: 'azurerm'
-                command: 'apply'
-                commandOptions: 'tfplan'
-                workingDirectory: $(workingDirectory)
-                environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
+# - stage: Apply_${{ parameters.environment }} 
+#   displayName: Apply_${{ parameters.environment }}
+#   dependsOn: Plan_${{ parameters.environment }}
+#   jobs:
+#     - deployment: TerraformApply
+#       displayName: 'Terraform Apply'
+#       environment: ${{ parameters.environment }}
+#       strategy:
+#         runOnce:
+#           deploy:
+#             steps:
+#             - checkout: self
+#             - task: TerraformInstaller@1
+#               displayName: 'Install Terraform'
+#               inputs:
+#                 terraformVersion: 'latest'
+#             - download: current
+#               artifact: plan-${{ parameters.environment }}  
+#               path: $(workingDirectory)
+#             - task: TerraformTask@5
+#               displayName: 'Terraform Init'
+#               inputs:
+#                 provider: 'azurerm'
+#                 command: 'init'
+#                 workingDirectory: $(workingDirectory)
+#                 backendServiceArm: ${{ parameters.serviceConnection }}
+#                 backendAzureRmResourceGroupName: 'rg_devops'
+#                 backendAzureRmStorageAccountName: 'tfdevopsaccount'
+#                 backendAzureRmContainerName: 'tf-dev-state-container'
+#                 backendAzureRmKey: ${{ parameters.stateKey }}
+#                 backendAzureRmUseCliFlagsForAuthentication: true
+#             - task: TerraformTask@5
+#               displayName: 'Apply Terraform Plan'
+#               # condition: and(succeeded(), eq(variables['terraformPlan.changesPresent'], 'true'))
+#               inputs:
+#                 provider: 'azurerm'
+#                 command: 'apply'
+#                 commandOptions: 'tfplan'
+#                 workingDirectory: $(workingDirectory)
+#                 environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
