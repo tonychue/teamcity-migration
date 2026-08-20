@@ -24,11 +24,11 @@ stages:
       inputs:
         provider: 'azurerm'
         command: 'init'
-        backendServiceArm: 'testsvc'
+        backendServiceArm: 'HCP Terraform (contoso-ltd)'
         backendAzureRmResourceGroupName: 'rg_devops'
         backendAzureRmStorageAccountName: 'tfdevopsaccount'
         backendAzureRmContainerName: 'tf-dev-state-container'
-        backendAzureRmKey: 'uksouth/twrraform.state'
+        backendAzureRmKey: 'uksouth/terraform.state'
 
 
     - script: |
