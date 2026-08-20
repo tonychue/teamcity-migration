@@ -78,7 +78,7 @@ stages:
       inputs:
         provider: 'azurerm'
         command: 'init'
-        workingDirectory: $(workingDirectory)
+        # workingDirectory: $(workingDirectory)
         backendServiceArm: ${{ parameters.serviceConnection }}
         backendAzureRmResourceGroupName: 'rg_devops'
         backendAzureRmStorageAccountName: 'tfdevopsaccount'
