@@ -109,7 +109,7 @@ stages:
         provider: 'azurerm'
         command: 'plan'
         commandOptions: '-out main.tfplan'
-        workingDirectory: $(workingDirectory)
+        # workingDirectory: $(workingDirectory)
         environmentServiceNameAzureRM: 'terraform'
         publishPlan: 'Production plan'
 
@@ -120,5 +120,5 @@ stages:
         provider: 'azurerm'
         command: 'apply'
         commandOptions: '-main.tfplan'
-        workingDirectory: $(workingDirectory)
+        # workingDirectory: $(workingDirectory)
         environmentServiceNameAzureRM: 'terraform'
