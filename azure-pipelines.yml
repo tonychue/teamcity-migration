@@ -17,6 +17,15 @@ stages:
   - job: TerraformPlan
     displayName: 'Terraform Plan'
     steps:
+    - task: TerraformTask@5
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        backendServiceArm: 'testsvc'
+        backendAzureRmResourceGroupName: 'rg_devops'
+        backendAzureRmStorageAccountName: 'tfdevopsaccount'
+        backendAzureRmContainerName: 'tf-dev-state-container'
+        backendAzureRmKey: 'uksouth/twrraform.state'
     - task: TerraformInstaller@0
       inputs:
         terraformVersion: 'latest'
