@@ -17,6 +17,9 @@ stages:
   - job: TerraformPlan
     displayName: 'Terraform Plan'
     steps:
+    - task: TerraformInstaller@0
+      inputs:
+        terraformVersion: 'latest'
     - task: TerraformTask@5
       inputs:
         provider: 'azurerm'
@@ -26,9 +29,7 @@ stages:
         backendAzureRmStorageAccountName: 'tfdevopsaccount'
         backendAzureRmContainerName: 'tf-dev-state-container'
         backendAzureRmKey: 'uksouth/twrraform.state'
-    - task: TerraformInstaller@0
-      inputs:
-        terraformVersion: 'latest'
+
 
     - script: |
         terraform --version
