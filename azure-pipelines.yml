@@ -90,6 +90,10 @@ stages:
             --container-name tf-dev-state-container \
             --auth-mode login \
             --output table
+
+          az account show \
+          --query "{appId:user.name, subscription:id, tenant:tenantId}" \
+          -o table
           terraform init \
             -backend-config="storage_account_name=tfdevopsaccount" \
             -backend-config="container_name=tf-dev-state-container" \
