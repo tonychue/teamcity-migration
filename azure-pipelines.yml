@@ -94,13 +94,14 @@ stages:
           az account show \
           --query "{appId:user.name, subscription:id, tenant:tenantId}" \
           -o table
-          terraform init \
-            -backend-config="storage_account_name=tfdevopsaccount" \
-            -backend-config="container_name=tf-dev-state-container" \
-            -backend-config="key=uksouth/terraform.state" \
-            -backend-config="resource_group_name=rg_devops" \
-            -backend-config="subscription_id=732ec2db-5140-4675-bf72-0dd352a999a8" \
-            -backend-config="use_azuread_auth=true"
+          terraform init 
+          # \
+            # -backend-config="storage_account_name=tfdevopsaccount" \
+            # -backend-config="container_name=tf-dev-state-container" \
+            # -backend-config="key=uksouth/terraform.state" \
+            # -backend-config="resource_group_name=rg_devops" \
+            # -backend-config="subscription_id=732ec2db-5140-4675-bf72-0dd352a999a8" \
+            # -backend-config="use_azuread_auth=true"
 
     - task: TerraformTask@5
       displayName: 'Terraform Plan'

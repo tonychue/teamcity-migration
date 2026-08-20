@@ -7,7 +7,14 @@ terraform {
         # storage_account_name = "abcd1234"                              # Can be passed via `-backend-config=`"storage_account_name=<storage account name>"` in the `init` command.
         # container_name       = "tfstate"                               # Can be passed via `-backend-config=`"container_name=<container name>"` in the `init` command.
         # key                  = "prod.terraform.tfstate"                # Can be passed via `-backend-config=`"key=<blob key name>"` in the `init` command.
-  }
+        storage_account_name="tfdevopsaccount"
+        container_name="tf-dev-state-container"
+        key="uksouth/terraform.state"
+        resource_group_name="rg_devops"
+        subscription_id="732ec2db-5140-4675-bf72-0dd352a999a8"
+        use_azuread_auth=true
+
+  } 
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
