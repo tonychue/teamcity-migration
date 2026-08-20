@@ -10,7 +10,7 @@ trigger:
 parameters:
   - name: environment
     type: string
-    default: 'dev'
+    default: 'terraform'
   - name: serviceConnection
     type: string
     default: 'terraform'
