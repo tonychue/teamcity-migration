@@ -65,7 +65,7 @@ stages:
 
     - checkout: self
 
-    - task: TerraformInstaller@0
+    - task: TerraformInstaller@1
       displayName: 'Install Terraform'
       inputs:
         terraformVersion: 'latest'
@@ -108,4 +108,17 @@ stages:
       inputs:
         provider: 'azurerm'
         command: 'plan'
+        commandOptions: '-out main.tfplan'
+        workingDirectory: $(workingDirectory)
+        environmentServiceNameAzureRM: 'terraform'
+        publishPlan: 'Production plan'
+
+    - task: TerraformTask@5
+      displayName: 'Apply Terraform Plan'
+      condition: and(succeeded(), eq(variables['terraformPlan.changesPresent'], 'true'))
+      inputs:
+        provider: 'azurerm'
+        command: 'apply'
+        commandOptions: '-main.tfplan'
+        workingDirectory: $(workingDirectory)
         environmentServiceNameAzureRM: 'terraform'
