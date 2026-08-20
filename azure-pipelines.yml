@@ -107,4 +107,4 @@ stages:
       inputs:
         provider: 'azurerm'
         command: 'plan'
-        environmentServiceNameAzureRM: 'HCP Terraform (contoso-ltd)'
+        environmentServiceNameAzureRM: 'terraform'
