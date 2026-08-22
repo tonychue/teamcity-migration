@@ -10,13 +10,17 @@ trigger:
 parameters:
   - name: environment
     type: string
-    default: 'terraform'
+    default: 'dev'
+    values:
+    - dev
+    - stage
+    - prod
   - name: serviceConnection
     type: string
     default: 'terraform'
   - name: stateKey
     type: string
-    default: 'uksouth/terraform.state'
+    default: ''
   - name: workingDirectory
     type: string
     default: '$(System.DefaultWorkingDirectory)'
@@ -78,12 +82,12 @@ stages:
       inputs:
         provider: 'azurerm'
         command: 'init'
-        workingDirectory: $(System.DefaultWorkingDirectory)
+        workingDirectory: ${{ parameters.workingDirectory }}
         backendServiceArm: ${{ parameters.serviceConnection }}
         backendAzureRmResourceGroupName: 'rg_devops'
         backendAzureRmStorageAccountName: 'tfdevopsaccount'
         backendAzureRmContainerName: 'tf-dev-state-container'
-        backendAzureRmKey: ${{ parameters.stateKey }}
+        backendAzureRmKey: uksouth/${{ parameters.environment }}/terraform.tfstate
         backendAzureRmUseCliFlagsForAuthentication: true
 
     - task: TerraformTask@5
@@ -91,12 +95,12 @@ stages:
       inputs:
         provider: 'azurerm'
         command: 'plan'
-        commandOptions: '-out=tfplan -var-file=$(System.DefaultWorkingDirectory)/${{ parameters.environment }}.tfvars'
-        workingDirectory: $(System.DefaultWorkingDirectory)
+        commandOptions: '-out=tfplan -var-file=${{ parameters.workingDirectory }}/${{ parameters.environment }}.tfvars'
+        workingDirectory: ${{ parameters.workingDirectory }}
         environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
         # publishPlan: 'Production plan'
 
-    - publish: $(workingDirectory)/tfplan
+    - publish: ${{ parameters.workingDirectory }}/tfplan
       artifact: plan-${{ parameters.environment }}
 
 # - stage: Apply_${{ parameters.environment }} 
