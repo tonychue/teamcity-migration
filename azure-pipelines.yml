@@ -165,15 +165,15 @@ stages:
 - stage: Apply_${{ parameters.environment }} 
   displayName: Apply_${{ parameters.environment }}
   dependsOn: Plan_${{ parameters.environment }}
-  condition: >
-    and(
-      succeeded(),
-      eq(
-        stageDependencies.Plan_${{ parameters.environment }}.TerraformPlan.outputs['terraformPlan.changesPresent'],
-        'true'
-      ),
-      eq('${{ parameters.destroy }}', 'false')
-    )
+  # condition: >
+  #   and(
+  #     succeeded(),
+  #     eq(
+  #       stageDependencies.Plan_${{ parameters.environment }}.TerraformPlan.outputs['terraformPlan.changesPresent'],
+  #       'true'
+  #     ),
+  #     eq('${{ parameters.destroy }}', 'false')
+  #   )
   jobs:
     - deployment: TerraformApply
       displayName: 'Terraform Apply'
