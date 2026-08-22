@@ -121,7 +121,7 @@ stages:
                 terraformVersion: 'latest'
             - download: current
               artifact: plan-${{ parameters.environment }}  
-              path: ${{ parameters.workingDirectory }}
+              # path: ${{ parameters.workingDirectory }}
             - task: TerraformTask@5
               displayName: 'Terraform Init'
               inputs:
@@ -140,6 +140,6 @@ stages:
               inputs:
                 provider: 'azurerm'
                 command: 'apply'
-                commandOptions: 'tfplan'
+                commandOptions: $(Pipeline.Workspace)/plan-${{ parameters.environment }}/tfplan
                 workingDirectory: ${{ parameters.workingDirectory }}
                 environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
