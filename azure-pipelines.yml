@@ -95,7 +95,7 @@ stages:
         backendAzureRmStorageAccountName: 'tfdevopsaccount'
         backendAzureRmContainerName: 'tf-dev-state-container'
         backendAzureRmKey: uksouth/${{ parameters.environment }}/terraform.tfstate
-        backendAzureRmUseCliFlagsForAuthentication: true
+        backendAzureRmUseCliFlagsForAuthentication: false
 
     # - task: TerraformTask@5
     #   displayName: 'Terraform Plan'
