@@ -55,10 +55,11 @@ stages:
     - task: AzureCLI@2
       displayName: 'Azure Login and Terraform Init'
       inputs:
-        azureSubscription: 'terraform'
+        azureSubscription: ${{ parameters.serviceConnection }}
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         addSpnToEnvironment: true
+        workingDirectory: ${{ parameters.workingDirectory }}
         inlineScript: |
           set -e
 
@@ -107,35 +108,55 @@ stages:
     #     environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
 
 
-    - task: Bash@3
+    - task: AzureCLI@2
       name: terraformPlan
       displayName: 'Terraform Plan'
       inputs:
-        targetType: 'inline'
+        azureSubscription: ${{ parameters.serviceConnection }}
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        addSpnToEnvironment: true
         workingDirectory: ${{ parameters.workingDirectory }}
-        script: |
+
+        inlineScript: |
           set +e
+
+          echo "Azure account:"
+          az account show
+
+          echo "Subscription:"
+          az account show --query id -o tsv
+
+          echo "Tenant:"
+          az account show --query tenantId -o tsv
 
           terraform plan \
             -out=tfplan \
             -detailed-exitcode \
-            -var-file=${{ parameters.workingDirectory }}/environments/${{ parameters.environment }}.tfvars
+            -var-file="${{ parameters.workingDirectory }}/environments/${{ parameters.environment }}.tfvars"
 
           PLAN_EXIT_CODE=$?
 
           echo "Terraform plan exit code: $PLAN_EXIT_CODE"
 
           if [ "$PLAN_EXIT_CODE" -eq 0 ]; then
+
             echo "No infrastructure changes detected."
+
             echo "##vso[task.setvariable variable=changesPresent;isOutput=true]false"
 
           elif [ "$PLAN_EXIT_CODE" -eq 2 ]; then
+
             echo "Infrastructure changes detected."
+
             echo "##vso[task.setvariable variable=changesPresent;isOutput=true]true"
 
           else
+
             echo "Terraform plan failed."
+
             exit "$PLAN_EXIT_CODE"
+
           fi
 
     - publish: ${{ parameters.workingDirectory }}/tfplan
