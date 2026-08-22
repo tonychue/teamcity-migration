@@ -134,12 +134,12 @@ stages:
                 backendAzureRmContainerName: 'tf-dev-state-container'
                 backendAzureRmKey: uksouth/${{ parameters.environment }}/terraform.tfstate
                 backendAzureRmUseCliFlagsForAuthentication: true
-            # - task: TerraformTask@5
-            #   displayName: 'Apply Terraform Plan'
-            #   # condition: and(succeeded(), eq(variables['terraformPlan.changesPresent'], 'true'))
-            #   inputs:
-            #     provider: 'azurerm'
-            #     command: 'apply'
-            #     commandOptions: 'tfplan'
-            #     workingDirectory: ${{ parameters.workingDirectory }}
-            #     environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
+            - task: TerraformTask@5
+              displayName: 'Apply Terraform Plan'
+              # condition: and(succeeded(), eq(variables['terraformPlan.changesPresent'], 'true'))
+              inputs:
+                provider: 'azurerm'
+                command: 'apply'
+                commandOptions: 'tfplan'
+                workingDirectory: ${{ parameters.workingDirectory }}
+                environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
