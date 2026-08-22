@@ -121,7 +121,7 @@ stages:
                 terraformVersion: 'latest'
             - download: current
               artifact: plan-${{ parameters.environment }}  
-              path: $(workingDirectory)
+              path: ${{ parameters.workingDirectory }}
             - task: TerraformTask@5
               displayName: 'Terraform Init'
               inputs:
