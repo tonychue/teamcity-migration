@@ -31,7 +31,7 @@ variable "vnet_address_space" {
 variable "subnets" {
   description = "Virtual network subnets"
 
-  type = map(object({
+  type = list(object({
     name             = string
     address_prefixes = set(string)
 
