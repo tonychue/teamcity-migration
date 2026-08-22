@@ -44,7 +44,7 @@ variable "subnets" {
         name    = string
         actions = optional(set(string), [])
       })
-    })), {})
+    })), [])
 
     default_outbound_access_enabled = optional(bool, false)
   }))
