@@ -4,8 +4,10 @@
 # https://aka.ms/yaml
 
 trigger:
-- main
-- tonychue-patch-1
+  branches:
+    include:
+    - main
+    - tonychue-patch-1
 
 parameters:
   - name: environment
@@ -18,13 +20,18 @@ parameters:
   - name: serviceConnection
     type: string
     default: 'terraform'
-  # - name: stateKey
-  #   type: string
-  #   default: ''
+  - name: stateKey
+    type: string
+    default: uksouth/dev/terraform.tfstate
   - name: workingDirectory
     type: string
     default: '$(System.DefaultWorkingDirectory)'
-
+  - name: destroy
+    type: boolean
+    default: false
+  - name: confirmDestroy
+    type: string
+    default: ''
 pool:
   vmImage: ubuntu-latest
 
@@ -90,15 +97,46 @@ stages:
         backendAzureRmKey: uksouth/${{ parameters.environment }}/terraform.tfstate
         backendAzureRmUseCliFlagsForAuthentication: true
 
-    - task: TerraformTask@5
+    # - task: TerraformTask@5
+    #   displayName: 'Terraform Plan'
+    #   inputs:
+    #     provider: 'azurerm'
+    #     command: 'plan'
+    #     commandOptions: '-out=tfplan -var-file=${{ parameters.workingDirectory }}/environments/${{ parameters.environment }}.tfvars'
+    #     workingDirectory: ${{ parameters.workingDirectory }}
+    #     environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
+
+
+    - task: Bash@3
+      name: terraformPlan
       displayName: 'Terraform Plan'
       inputs:
-        provider: 'azurerm'
-        command: 'plan'
-        commandOptions: '-out=tfplan -var-file=${{ parameters.workingDirectory }}/environments/${{ parameters.environment }}.tfvars'
+        targetType: 'inline'
         workingDirectory: ${{ parameters.workingDirectory }}
-        environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
-        # publishPlan: 'Production plan'
+        script: |
+          set +e
+
+          terraform plan \
+            -out=tfplan \
+            -detailed-exitcode \
+            -var-file=${{ parameters.workingDirectory }}/environments/${{ parameters.environment }}.tfvars
+
+          PLAN_EXIT_CODE=$?
+
+          echo "Terraform plan exit code: $PLAN_EXIT_CODE"
+
+          if [ "$PLAN_EXIT_CODE" -eq 0 ]; then
+            echo "No infrastructure changes detected."
+            echo "##vso[task.setvariable variable=changesPresent;isOutput=true]false"
+
+          elif [ "$PLAN_EXIT_CODE" -eq 2 ]; then
+            echo "Infrastructure changes detected."
+            echo "##vso[task.setvariable variable=changesPresent;isOutput=true]true"
+
+          else
+            echo "Terraform plan failed."
+            exit "$PLAN_EXIT_CODE"
+          fi
 
     - publish: ${{ parameters.workingDirectory }}/tfplan
       artifact: plan-${{ parameters.environment }}
@@ -106,6 +144,15 @@ stages:
 - stage: Apply_${{ parameters.environment }} 
   displayName: Apply_${{ parameters.environment }}
   dependsOn: Plan_${{ parameters.environment }}
+  condition: >
+    and(
+      succeeded(),
+      eq(
+        stageDependencies.Plan_${{ parameters.environment }}.TerraformPlan.outputs['terraformPlan.changesPresent'],
+        'true'
+      ),
+      eq('${{ parameters.destroy }}', 'false')
+    )
   jobs:
     - deployment: TerraformApply
       displayName: 'Terraform Apply'
@@ -143,3 +190,63 @@ stages:
                 commandOptions: $(Pipeline.Workspace)/plan-${{ parameters.environment }}/tfplan
                 workingDirectory: ${{ parameters.workingDirectory }}
                 environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
+
+- stage: Destroy_${{ parameters.environment }}
+  displayName: Destroy ${{ parameters.environment }}
+
+  dependsOn:
+    - Plan_${{ parameters.environment }}
+
+  condition: >
+    and(
+      succeeded(),
+      eq('${{ parameters.destroy }}', 'true'),
+      or(
+        ne('${{ parameters.environment }}', 'prod'),
+        eq('${{ parameters.confirmDestroy }}', 'DESTROY-PROD')
+      )
+    )
+
+  jobs:
+
+  - deployment: TerraformDestroy
+    displayName: Terraform Destroy
+
+    environment: ${{ parameters.environment }}
+
+    strategy:
+      runOnce:
+        deploy:
+
+          steps:
+
+          - checkout: self
+
+          - task: TerraformInstaller@1
+            displayName: Install Terraform
+            inputs:
+              terraformVersion: latest
+
+          - task: TerraformTask@5
+            displayName: Terraform Init
+            inputs:
+              provider: azurerm
+              command: init
+              workingDirectory: ${{ parameters.workingDirectory }}
+              backendServiceArm: ${{ parameters.serviceConnection }}
+              backendAzureRmResourceGroupName: rg_devops
+              backendAzureRmStorageAccountName: tfdevopsaccount
+              backendAzureRmContainerName: tf-dev-state-container
+              backendAzureRmKey: uksouth/${{ parameters.environment }}/terraform.tfstate
+              backendAzureRmUseCliFlagsForAuthentication: true
+
+          - task: TerraformTask@5
+            displayName: Terraform Destroy
+            inputs:
+              provider: azurerm
+              command: destroy
+              workingDirectory: ${{ parameters.workingDirectory }}
+              environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
+              commandOptions: >
+                -var-file=${{ parameters.workingDirectory }}/${{ parameters.environment }}.tfvars
+                -auto-approve
