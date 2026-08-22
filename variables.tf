@@ -31,13 +31,13 @@ variable "vnet_address_space" {
 variable "subnets" {
   description = "Virtual network subnets"
 
-  type = list(object({
+  type = map(object({
     name             = string
     address_prefixes = set(string)
 
     service_endpoints = optional(set(string), [])
 
-    delegations = optional(map(object({
+    delegations = optional(list(object({
       name = string
 
       service_delegation = object({
