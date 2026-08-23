@@ -161,6 +161,9 @@ stages:
 
     - publish: ${{ parameters.workingDirectory }}/tfplan
       artifact: plan-${{ parameters.environment }}
+    - bash: |
+        echo "changesPresent = '$(changesPresent)'"
+      displayName: Debug Terraform Change Status
 
 - stage: Apply_${{ parameters.environment }} 
   displayName: Apply_${{ parameters.environment }}
