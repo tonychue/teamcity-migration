@@ -169,14 +169,10 @@ stages:
     changesPresent: $[
       stageDependencies.Plan_${{ parameters.environment }}.TerraformPlan.outputs['terraformPlan.changesPresent']]
 
-  # condition: and(
-  #   succeeded(),
-  #   eq(variables['changesPresent'], 'true'),
-  #   eq('${{ parameters.destroy }}', 'false')
-  #   )
   condition: and(
     succeeded(),
-    eq(variables['changesPresent'], 'true')
+    eq(variables['changesPresent'], 'true'),
+    eq('${{ parameters.destroy }}', 'false')
     )
   jobs:
     - deployment: TerraformApply
@@ -206,6 +202,9 @@ stages:
                 backendAzureRmContainerName: 'tf-dev-state-container'
                 backendAzureRmKey: uksouth/${{ parameters.environment }}/terraform.tfstate
                 backendAzureRmUseCliFlagsForAuthentication: true
+            - bash: |
+                echo "changesPresent = '$(changesPresent)'"
+              displayName: Debug Terraform Change Status
             - task: TerraformTask@5
               displayName: 'Apply Terraform Plan'
               # condition: and(succeeded(), eq(variables['terraformPlan.changesPresent'], 'true'))
