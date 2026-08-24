@@ -175,7 +175,7 @@ stages:
       and(
         succeeded(),
         eq(variables['changesPresent'], 'true'),
-        eq('${{ parameters.destroy }}', 'false')
+        eq('${{ parameters.destroy }}', 'False')
       )
   jobs:
     - deployment: TerraformApply
