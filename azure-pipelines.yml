@@ -28,7 +28,7 @@ parameters:
     default: '$(System.DefaultWorkingDirectory)'
   - name: destroy
     type: boolean
-    default: false
+    default: False
   - name: confirmDestroy
     type: string
     default: 'DESTROY-NONPROD'
@@ -173,8 +173,8 @@ stages:
   condition: > 
     and(
     succeeded(),
-    eq(variables['changesPresent'], 'true'),
-    eq('${{ parameters.destroy }}', 'false')
+    eq(variables['changesPresent'], 'True'),
+    eq('${{ parameters.destroy }}', 'False')
     )
   jobs:
     - deployment: TerraformApply
