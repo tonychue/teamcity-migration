@@ -170,11 +170,10 @@ stages:
   dependsOn: Plan_${{ parameters.environment }}
   variables:
     changesPresent: $[stageDependencies.Plan_${{ parameters.environment }}.TerraformPlan.outputs['terraformPlan.changesPresent']]
-  condition: > 
+  condition: >
     and(
-    succeeded(),
-    eq(variables['changesPresent'], 'true'),
-    eq('${{ parameters.destroy }}', 'false')
+      succeeded(),
+      eq(variables['changesPresent'], 'true')
     )
   jobs:
     - deployment: TerraformApply
