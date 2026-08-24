@@ -163,6 +163,7 @@ stages:
       artifact: plan-${{ parameters.environment }}
     - bash: |
         echo "changesPresent = '$(terraformPlan.changesPresent)'"
+        echo "destroyvalue = '${{ parameters.destroy }}'"
       displayName: Debug Terraform Change Status
 
 - stage: Apply_${{ parameters.environment }} 
@@ -173,7 +174,8 @@ stages:
     condition: >
       and(
         succeeded(),
-        eq(variables['changesPresent'], 'true')
+        eq(variables['changesPresent'], 'true'),
+        eq('${{ parameters.destroy }}', 'false')
       )
   jobs:
     - deployment: TerraformApply
