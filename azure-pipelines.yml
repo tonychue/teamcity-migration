@@ -219,7 +219,7 @@ stages:
                   workingDirectory: ${{ parameters.workingDirectory }}
                   environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
 
-- ${{ if eq(parameters.destroy, true }}:                  
+- ${{ if eq(parameters.destroy, true )}}:                  
   - stage: Destroy_${{ parameters.environment }}
     displayName: Destroy ${{ parameters.environment }}
 
