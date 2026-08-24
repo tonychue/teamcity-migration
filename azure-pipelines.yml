@@ -166,114 +166,115 @@ stages:
         echo "destroyvalue = '${{ parameters.destroy }}'"
       displayName: Debug Terraform Change Status
 
-- stage: Apply_${{ parameters.environment }} 
-  displayName: Apply_${{ parameters.environment }}
-  dependsOn: Plan_${{ parameters.environment }}
-  variables: 
-    changesPresent: $[stageDependencies.Plan_${{ parameters.environment }}.TerraformPlan.outputs['terraformPlan.changesPresent']]
+
+- ${{ if eq(parameters.destroy, false) }}:
+  - stage: Apply_${{ parameters.environment }} 
+    displayName: Apply_${{ parameters.environment }}
+    dependsOn: Plan_${{ parameters.environment }}
+    variables: 
+      changesPresent: $[stageDependencies.Plan_${{ parameters.environment }}.TerraformPlan.outputs['terraformPlan.changesPresent']]
+      condition: >
+        and(
+          succeeded(),
+          eq(variables['changesPresent'], 'true')
+        )
+    jobs:
+      - deployment: TerraformApply
+        displayName: 'Terraform Apply'
+        environment: ${{ parameters.environment }}
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+              - checkout: self
+              - task: TerraformInstaller@1
+                displayName: 'Install Terraform'
+                inputs:
+                  terraformVersion: 'latest'
+              - download: current
+                artifact: plan-${{ parameters.environment }}  
+                # path: ${{ parameters.workingDirectory }}
+              - task: TerraformTask@5
+                displayName: 'Terraform Init'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'init'
+                  workingDirectory: ${{ parameters.workingDirectory }}
+                  backendServiceArm: ${{ parameters.serviceConnection }}
+                  backendAzureRmResourceGroupName: 'rg_devops'
+                  backendAzureRmStorageAccountName: 'tfdevopsaccount'
+                  backendAzureRmContainerName: 'tf-dev-state-container'
+                  backendAzureRmKey: uksouth/${{ parameters.environment }}/terraform.tfstate
+                  backendAzureRmUseCliFlagsForAuthentication: true
+              - bash: |
+                  echo "changesPresent = '$(changesPresent)'"
+                displayName: Debug Terraform Change Status
+              - task: TerraformTask@5
+                displayName: 'Apply Terraform Plan'
+                # condition: and(succeeded(), eq(variables['terraformPlan.changesPresent'], 'true'))
+                inputs:
+                  provider: 'azurerm'
+                  command: 'apply'
+                  commandOptions: $(Pipeline.Workspace)/plan-${{ parameters.environment }}/tfplan
+                  workingDirectory: ${{ parameters.workingDirectory }}
+                  environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
+
+- ${{ if eq(parameters.destroy, true }}:                  
+  - stage: Destroy_${{ parameters.environment }}
+    displayName: Destroy ${{ parameters.environment }}
+
+    dependsOn:
+      - Plan_${{ parameters.environment }}
+
     condition: >
       and(
         succeeded(),
-        eq(variables['changesPresent'], 'true'),
-        eq('${{ parameters.destroy }}', 'False')
+        or(
+          ne('${{ parameters.environment }}', 'prod'),
+          eq('${{ parameters.confirmDestroy }}', 'DESTROY-PROD')
+        )
       )
-  jobs:
-    - deployment: TerraformApply
-      displayName: 'Terraform Apply'
+
+    jobs:
+
+    - deployment: TerraformDestroy
+      displayName: Terraform Destroy
+
       environment: ${{ parameters.environment }}
+
       strategy:
         runOnce:
           deploy:
+
             steps:
+
             - checkout: self
+
             - task: TerraformInstaller@1
-              displayName: 'Install Terraform'
+              displayName: Install Terraform
               inputs:
-                terraformVersion: 'latest'
-            - download: current
-              artifact: plan-${{ parameters.environment }}  
-              # path: ${{ parameters.workingDirectory }}
+                terraformVersion: latest
+
             - task: TerraformTask@5
-              displayName: 'Terraform Init'
+              displayName: Terraform Init
               inputs:
-                provider: 'azurerm'
-                command: 'init'
+                provider: azurerm
+                command: init
                 workingDirectory: ${{ parameters.workingDirectory }}
                 backendServiceArm: ${{ parameters.serviceConnection }}
-                backendAzureRmResourceGroupName: 'rg_devops'
-                backendAzureRmStorageAccountName: 'tfdevopsaccount'
-                backendAzureRmContainerName: 'tf-dev-state-container'
+                backendAzureRmResourceGroupName: rg_devops
+                backendAzureRmStorageAccountName: tfdevopsaccount
+                backendAzureRmContainerName: tf-dev-state-container
                 backendAzureRmKey: uksouth/${{ parameters.environment }}/terraform.tfstate
                 backendAzureRmUseCliFlagsForAuthentication: true
-            - bash: |
-                echo "changesPresent = '$(changesPresent)'"
-              displayName: Debug Terraform Change Status
+
             - task: TerraformTask@5
-              displayName: 'Apply Terraform Plan'
-              # condition: and(succeeded(), eq(variables['terraformPlan.changesPresent'], 'true'))
+              displayName: Terraform Destroy
               inputs:
-                provider: 'azurerm'
-                command: 'apply'
-                commandOptions: $(Pipeline.Workspace)/plan-${{ parameters.environment }}/tfplan
+                provider: azurerm
+                command: destroy
                 workingDirectory: ${{ parameters.workingDirectory }}
                 environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
-
-- stage: Destroy_${{ parameters.environment }}
-  displayName: Destroy ${{ parameters.environment }}
-
-  dependsOn:
-    - Plan_${{ parameters.environment }}
-
-  condition: >
-    and(
-      succeeded(),
-      eq('${{ parameters.destroy }}', 'true'),
-      or(
-        ne('${{ parameters.environment }}', 'prod'),
-        eq('${{ parameters.confirmDestroy }}', 'DESTROY-PROD')
-      )
-    )
-
-  jobs:
-
-  - deployment: TerraformDestroy
-    displayName: Terraform Destroy
-
-    environment: ${{ parameters.environment }}
-
-    strategy:
-      runOnce:
-        deploy:
-
-          steps:
-
-          - checkout: self
-
-          - task: TerraformInstaller@1
-            displayName: Install Terraform
-            inputs:
-              terraformVersion: latest
-
-          - task: TerraformTask@5
-            displayName: Terraform Init
-            inputs:
-              provider: azurerm
-              command: init
-              workingDirectory: ${{ parameters.workingDirectory }}
-              backendServiceArm: ${{ parameters.serviceConnection }}
-              backendAzureRmResourceGroupName: rg_devops
-              backendAzureRmStorageAccountName: tfdevopsaccount
-              backendAzureRmContainerName: tf-dev-state-container
-              backendAzureRmKey: uksouth/${{ parameters.environment }}/terraform.tfstate
-              backendAzureRmUseCliFlagsForAuthentication: true
-
-          - task: TerraformTask@5
-            displayName: Terraform Destroy
-            inputs:
-              provider: azurerm
-              command: destroy
-              workingDirectory: ${{ parameters.workingDirectory }}
-              environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
-              commandOptions: >
-                -var-file=${{ parameters.workingDirectory }}/environments/${{ parameters.environment }}.tfvars
-                -auto-approve
+                commandOptions: >
+                  -var-file=${{ parameters.workingDirectory }}/environments/${{ parameters.environment }}.tfvars
+                  -auto-approve
