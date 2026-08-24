@@ -168,13 +168,13 @@ stages:
 - stage: Apply_${{ parameters.environment }} 
   displayName: Apply_${{ parameters.environment }}
   dependsOn: Plan_${{ parameters.environment }}
-  variables:
+  variables: 
     changesPresent: $[stageDependencies.Plan_${{ parameters.environment }}.TerraformPlan.outputs['terraformPlan.changesPresent']]
-  condition: >
-    and(
-      succeeded(),
-      eq(variables['changesPresent'], 'true')
-    )
+    condition: >
+      and(
+        succeeded(),
+        eq(variables['changesPresent'], 'true')
+      )
   jobs:
     - deployment: TerraformApply
       displayName: 'Terraform Apply'
