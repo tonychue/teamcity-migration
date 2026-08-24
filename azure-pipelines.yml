@@ -28,7 +28,7 @@ parameters:
     default: '$(System.DefaultWorkingDirectory)'
   - name: destroy
     type: boolean
-    default: false
+    # default: false
   - name: confirmDestroy
     type: string
     default: ''
